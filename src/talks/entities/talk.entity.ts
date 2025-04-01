@@ -5,12 +5,13 @@ import {
   ManyToOne,
   ManyToMany,
   JoinTable,
+  BaseEntity,
 } from 'typeorm';
 import { Speaker } from '../../speakers/entities/speaker.entity';
 import { Event } from '../../events/entities/event.entity';
 
 @Entity('talks')
-export class Talk {
+export class Talk extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

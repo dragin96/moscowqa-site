@@ -5,18 +5,20 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
+  private users: any[];
+
   constructor(
     private jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
-
-  private readonly users = [
-    {
-      id: 1,
-      username: this.configService.get('ADMIN_USER'),
-      password: this.configService.get('ADMIN_PASSWORD'),
-    },
-  ];
+  ) {
+    this.users = [
+      {
+        id: 1,
+        username: this.configService.get('ADMIN_USER'),
+        password: this.configService.get('ADMIN_PASSWORD'),
+      },
+    ];
+  }
 
   validateUser(username: string, password: string): any {
     const user = this.users.find(

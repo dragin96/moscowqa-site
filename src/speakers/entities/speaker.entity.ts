@@ -1,8 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  BaseEntity,
+} from 'typeorm';
 import { Talk } from '../../talks/entities/talk.entity';
 
 @Entity('speakers')
-export class Speaker {
+export class Speaker extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

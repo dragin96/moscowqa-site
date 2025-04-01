@@ -4,11 +4,12 @@ import {
   Column,
   ManyToMany,
   JoinTable,
+  BaseEntity,
 } from 'typeorm';
 import { Talk } from '../../talks/entities/talk.entity';
 
 @Entity('events')
-export class Event {
+export class Event extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
