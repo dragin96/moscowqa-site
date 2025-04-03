@@ -41,7 +41,7 @@ export default async function VideoPage() {
 
                     {talk.speakers && talk.speakers.length > 0 && (
                       <div className="flex items-center mb-3">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden mr-2 border border-gray-200">
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden mr-2">
                           <Image
                             src={talk.speakers[0].photo || "/placeholder.svg?height=50&width=50"}
                             alt={`${talk.speakers[0].firstName} ${talk.speakers[0].lastName}`}

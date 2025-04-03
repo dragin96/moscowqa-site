@@ -14,15 +14,15 @@ export interface Speaker {
 
 export interface Event {
   id: number
+  number: number
   title: string
-  isPublish: boolean
   date: string
-  company: string
-  address: string
+  time?: string
+  venue: string
   description: string
   registrationLink: string
   streamLink: string
-  videosLink: string
+  location: string
   talks?: Talk[]
 }
 
@@ -133,18 +133,19 @@ function getMonthName(monthIndex: number): string {
 }
 
 // Convert event to display format for the events list
-export function eventToDisplayFormat(event: Event) {
+export function eventToDisplayFormat(event: any): Event {
   return {
     id: event.id,
-    number: event.id, // Using ID as the event number for now
+    number: event.number,
     title: event.title,
     date: formatDate(event.date),
-    venue: event.company,
-    description:
-      event.talks && event.talks.length > 0 ? event.talks[0].abstract : "Информация о мероприятии появится позже.",
-    registrationLink: event.registrationLink,
-    streamLink: event.streamLink,
-    address: event.address,
+    time: event.time || '19:00',
+    venue: event.venue || '',
+    description: event.description || (event.talks && event.talks.length > 0 ? event.talks[0].abstract : "Информация о мероприятии появится позже."),
+    registrationLink: event.registrationLink || '#',
+    streamLink: event.streamLink || '#',
+    location: event.location || 'Место будет объявлено позже',
+    talks: event.talks || []
   }
 }
 

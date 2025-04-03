@@ -31,13 +31,18 @@ export class EventsService {
   }
 
   findAll() {
-    return this.eventsRepository.find({ relations: ['talks'] });
+    return this.eventsRepository.find({ 
+      relations: ['talks', 'talks.speakers'],
+      order: {
+        date: 'DESC'
+      }
+    });
   }
 
   findOne(id: number) {
     return this.eventsRepository.findOne({
       where: { id },
-      relations: ['talks'],
+      relations: ['talks', 'talks.speakers'],
     });
   }
 
