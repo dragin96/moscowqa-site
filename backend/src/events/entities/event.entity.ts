@@ -30,6 +30,9 @@ export class Event extends BaseEntity {
   @Column({ nullable: true })
   materialsLink: string;
 
+  @Column({ nullable: true, name: 'registration_link' })
+  registrationLink: string;
+
   @OneToMany(() => Talk, talk => talk.event)
   talks: Talk[];
 

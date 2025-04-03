@@ -25,13 +25,13 @@ export default async function EventsPage() {
   const events = sortedEvents.map(eventToDisplayFormat)
 
   // Function to check if event is upcoming
-  const isUpcoming = (date: string) => {
-    return new Date(date) > new Date()
+  const isUpcoming = (event: Event) => {
+    return new Date(event.rawDate) > new Date()
   }
 
   // Разделяем события на предстоящие и прошедшие
-  const upcomingEvents = events.filter(event => isUpcoming(event.date))
-  const pastEvents = events.filter(event => !isUpcoming(event.date))
+  const upcomingEvents = events.filter(event => isUpcoming(event))
+  const pastEvents = events.filter(event => !isUpcoming(event))
 
   const EventCard = ({ event }: { event: Event }) => (
     <article 
@@ -46,7 +46,7 @@ export default async function EventsPage() {
               {event.title.includes('x') ? event.title.split('x')[0].trim() : event.title}
             </span>
           </div>
-          {isUpcoming(event.date) && (
+          {isUpcoming(event) && (
             <div className="absolute top-6 right-6 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
               Предстоящее
             </div>
@@ -82,6 +82,19 @@ export default async function EventsPage() {
               <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-pink-100 text-pink-800">
                 {event.talks.length} {event.talks.length === 1 ? 'доклад' : 'докладов'}
               </span>
+            )}
+            {isUpcoming(event) && event.registrationLink && event.registrationLink !== '#' && (
+              <Link
+                href={event.registrationLink}
+                className="inline-flex items-center px-8 py-3 rounded-full bg-green-600 text-white font-medium hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Зарегистрироваться
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
             )}
             <Link
               href={`/event/${event.id}`}

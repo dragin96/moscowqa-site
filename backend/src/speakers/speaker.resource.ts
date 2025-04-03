@@ -17,7 +17,7 @@ export const SpeakerResourceOptions = {
           edit: false,
         },
       },
-      firstName: {
+      fullName: {
         position: 2,
         isTitle: true,
         isVisible: {
@@ -26,21 +26,29 @@ export const SpeakerResourceOptions = {
           show: true,
           edit: true,
         },
+        type: 'string',
+      },
+      firstName: {
+        isVisible: false,
       },
       lastName: {
+        isVisible: false,
+      },
+      photo: {
         position: 3,
+        type: 'string',
         isVisible: {
           list: true,
-          filter: true,
+          filter: false,
           show: true,
           edit: true,
         },
       },
-      photo: {
+      bio: {
         position: 4,
-        type: 'string',
+        type: 'richtext',
         isVisible: {
-          list: true,
+          list: false,
           filter: false,
           show: true,
           edit: true,
@@ -56,18 +64,8 @@ export const SpeakerResourceOptions = {
           edit: true,
         },
       },
-      bio: {
+      position: {
         position: 6,
-        type: 'richtext',
-        isVisible: {
-          list: false,
-          filter: false,
-          show: true,
-          edit: true,
-        },
-      },
-      email: {
-        position: 7,
         type: 'string',
         isVisible: {
           list: true,
@@ -76,28 +74,18 @@ export const SpeakerResourceOptions = {
           edit: true,
         },
       },
-      telegram: {
-        position: 8,
-        type: 'string',
+      socialLinks: {
+        position: 7,
+        type: 'mixed',
         isVisible: {
-          list: true,
-          filter: false,
-          show: true,
-          edit: true,
-        },
-      },
-      github: {
-        position: 9,
-        type: 'string',
-        isVisible: {
-          list: true,
+          list: false,
           filter: false,
           show: true,
           edit: true,
         },
       },
       talks: {
-        position: 10,
+        position: 8,
         type: 'reference',
         reference: 'Talk',
         isArray: true,
@@ -107,16 +95,58 @@ export const SpeakerResourceOptions = {
           show: true,
           edit: true,
         },
+        custom: {
+          get: (record) => {
+            if (record.talks) {
+              // Если talks массив объектов с id
+              if (Array.isArray(record.talks) && record.talks[0]?.id) {
+                return record.talks.map(talk => talk.id);
+              }
+              // Если talks массив ID
+              else if (Array.isArray(record.talks)) {
+                return record.talks;
+              }
+              // Если talks объект с массивом talks
+              else if (record.talks.talks) {
+                return record.talks.talks.map(talk => talk.id);
+              }
+            }
+            return [];
+          },
+          set: (value, record) => {
+            if (value) {
+              record.talks = value;
+            } else {
+              record.talks = [];
+            }
+          },
+        },
+        availableValues: async () => {
+          console.log('Speaker talks availableValues - start');
+          try {
+            const talks = await Talk.find();
+            console.log('Speaker talks availableValues - found talks:', talks);
+            const values = talks.map(talk => ({
+              value: talk.id,
+              label: talk.title,
+            }));
+            console.log('Speaker talks availableValues - mapped values:', values);
+            return values;
+          } catch (error) {
+            console.error('Speaker talks availableValues - error:', error);
+            throw error;
+          }
+        },
       }
     },
     sort: {
-      sortBy: 'lastName',
-      direction: 'asc',
+      sortBy: 'id',
+      direction: 'desc',
     },
-    listProperties: ['id', 'firstName', 'lastName', 'company', 'email', 'telegram', 'github', 'talks'],
-    filterProperties: ['id', 'firstName', 'lastName', 'company', 'email', 'talks'],
-    editProperties: ['firstName', 'lastName', 'photo', 'company', 'bio', 'email', 'telegram', 'github', 'talks'],
-    showProperties: ['id', 'firstName', 'lastName', 'photo', 'company', 'bio', 'email', 'telegram', 'github', 'talks'],
+    listProperties: ['id', 'fullName', 'photo', 'company', 'position', 'talks'],
+    filterProperties: ['id', 'fullName', 'company', 'position', 'talks'],
+    editProperties: ['fullName', 'photo', 'bio', 'company', 'position', 'socialLinks', 'talks'],
+    showProperties: ['id', 'fullName', 'photo', 'bio', 'company', 'position', 'socialLinks', 'talks'],
     navigation: {
       name: 'Контент',
       icon: 'User',
@@ -125,12 +155,28 @@ export const SpeakerResourceOptions = {
       new: {
         before: async (request) => {
           console.log('Speaker new before - request payload:', request.payload);
-          const { talks, ...otherParams } = request.payload;
-          const processedPayload = {
-            ...otherParams,
-            talks: talks ? (Array.isArray(talks) ? talks : [talks]).map(id => parseInt(id)) : [],
-          };
+          const processedPayload = { ...request.payload };
+          
+          // Разбиваем fullName на firstName и lastName
+          if (processedPayload.fullName) {
+            const [firstName, ...lastNameParts] = processedPayload.fullName.split(' ');
+            processedPayload.firstName = firstName;
+            processedPayload.lastName = lastNameParts.join(' ');
+            delete processedPayload.fullName;
+          }
+          
+          // Собираем все talks из payload
+          const talks = [];
+          for (const key in processedPayload) {
+            if (key.startsWith('talks.')) {
+              talks.push(processedPayload[key]);
+              delete processedPayload[key];
+            }
+          }
+          
+          processedPayload.talks = talks;
           console.log('Speaker new before - processed payload:', processedPayload);
+          
           return {
             ...request,
             payload: processedPayload,
@@ -146,13 +192,25 @@ export const SpeakerResourceOptions = {
           console.log('Speaker new after - found speaker:', speaker);
 
           if (speaker) {
-            if (record.params.talks && record.params.talks.length > 0) {
-              console.log('Speaker new after - processing talks:', record.params.talks);
-              const talks = await Talk.find({
-                where: { id: In(record.params.talks) }
+            // Получаем talks из request.payload, так как в record.params они могут быть в другом формате
+            const talks = [];
+            for (const key in record.params) {
+              if (key.startsWith('talks.')) {
+                talks.push(record.params[key]);
+              }
+            }
+            
+            console.log('Speaker new after - processing talks:', talks);
+            
+            if (talks.length > 0) {
+              const talkEntities = await Talk.find({
+                where: { id: In(talks) }
               });
-              console.log('Speaker new after - found talks:', talks);
-              speaker.talks = talks;
+              console.log('Speaker new after - found talks:', talkEntities);
+              speaker.talks = talkEntities;
+            } else {
+              console.log('Speaker new after - no talks to process');
+              speaker.talks = [];
             }
 
             await speaker.save();
@@ -165,12 +223,28 @@ export const SpeakerResourceOptions = {
       edit: {
         before: async (request) => {
           console.log('Speaker edit before - request payload:', request.payload);
-          const { talks, ...otherParams } = request.payload;
-          const processedPayload = {
-            ...otherParams,
-            talks: talks ? (Array.isArray(talks) ? talks : [talks]).map(id => parseInt(id)) : [],
-          };
+          const processedPayload = { ...request.payload };
+          
+          // Разбиваем fullName на firstName и lastName
+          if (processedPayload.fullName) {
+            const [firstName, ...lastNameParts] = processedPayload.fullName.split(' ');
+            processedPayload.firstName = firstName;
+            processedPayload.lastName = lastNameParts.join(' ');
+            delete processedPayload.fullName;
+          }
+          
+          // Собираем все talks из payload
+          const talks = [];
+          for (const key in processedPayload) {
+            if (key.startsWith('talks.')) {
+              talks.push(processedPayload[key]);
+              delete processedPayload[key];
+            }
+          }
+          
+          processedPayload.talks = talks;
           console.log('Speaker edit before - processed payload:', processedPayload);
+          
           return {
             ...request,
             payload: processedPayload,
@@ -186,14 +260,24 @@ export const SpeakerResourceOptions = {
           console.log('Speaker edit after - found speaker:', speaker);
 
           if (speaker) {
-            if (record.params.talks && record.params.talks.length > 0) {
-              console.log('Speaker edit after - processing talks:', record.params.talks);
-              const talks = await Talk.find({
-                where: { id: In(record.params.talks) }
+            // Получаем talks из request.payload, так как в record.params они могут быть в другом формате
+            const talks = [];
+            for (const key in record.params) {
+              if (key.startsWith('talks.')) {
+                talks.push(record.params[key]);
+              }
+            }
+            
+            console.log('Speaker edit after - processing talks:', talks);
+            
+            if (talks.length > 0) {
+              const talkEntities = await Talk.find({
+                where: { id: In(talks) }
               });
-              console.log('Speaker edit after - found talks:', talks);
-              speaker.talks = talks;
+              console.log('Speaker edit after - found talks:', talkEntities);
+              speaker.talks = talkEntities;
             } else {
+              console.log('Speaker edit after - no talks to process');
               speaker.talks = [];
             }
 
@@ -201,6 +285,29 @@ export const SpeakerResourceOptions = {
             console.log('Speaker edit after - saved speaker:', speaker);
           }
 
+          return response;
+        },
+      },
+      show: {
+        after: async (response) => {
+          const { record } = response;
+          if (record) {
+            // Предзаполняем fullName
+            record.params.fullName = `${record.params.firstName || ''} ${record.params.lastName || ''}`.trim();
+            
+            // Предзаполняем talks
+            if (record.params.talks) {
+              if (Array.isArray(record.params.talks)) {
+                record.params.talks = record.params.talks.map(talk => talk.id);
+              } else {
+                record.params.talks = [];
+              }
+            } else {
+              record.params.talks = [];
+            }
+            
+            console.log('Speaker show after - processed talks:', record.params.talks);
+          }
           return response;
         },
       },

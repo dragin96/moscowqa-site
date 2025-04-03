@@ -36,9 +36,6 @@ export class Talk extends BaseEntity {
   @Column({ nullable: true })
   materialsLink: string;
 
-  @Column({ type: 'jsonb', nullable: true })
-  speakerIds: number[];
-
   @ManyToMany(() => Speaker, (speaker) => speaker.talks)
   @JoinTable({
     name: 'talk_speakers',

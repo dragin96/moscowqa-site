@@ -5,6 +5,7 @@ export interface Speaker {
   lastName: string
   photo: string
   company: string
+  position?: string
   bio: string
   email: string
   telegram: string
@@ -17,6 +18,7 @@ export interface Event {
   number: number
   title: string
   date: string
+  rawDate: string
   time?: string
   venue: string
   description: string
@@ -138,6 +140,7 @@ export function eventToDisplayFormat(event: any): Event {
     id: event.id,
     number: event.number,
     title: event.title,
+    rawDate: event.date,
     date: formatDate(event.date),
     time: event.time || '19:00',
     venue: event.venue || '',

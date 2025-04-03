@@ -88,6 +88,22 @@ export const TalkResourceOptions = {
           show: true,
           edit: true,
         },
+        availableValues: async () => {
+          console.log('Talk event_id availableValues - start');
+          try {
+            const events = await Event.find();
+            console.log('Talk event_id availableValues - found events:', events);
+            const values = events.map(event => ({
+              value: event.id,
+              label: event.title,
+            }));
+            console.log('Talk event_id availableValues - mapped values:', values);
+            return values;
+          } catch (error) {
+            console.error('Talk event_id availableValues - error:', error);
+            throw error;
+          }
+        },
       },
       event: {
         isVisible: false,
@@ -99,9 +115,22 @@ export const TalkResourceOptions = {
         isArray: true,
         isVisible: {
           list: true,
-          filter: true,
-          show: true,
-          edit: true,
+        },
+        availableValues: async () => {
+          console.log('Talk speakers availableValues - start');
+          try {
+            const speakers = await Speaker.find();
+            console.log('Talk speakers availableValues - found speakers:', speakers);
+            const values = speakers.map(speaker => ({
+              value: speaker.id,
+              label: `${speaker.lastName}`,
+            }));
+            console.log('Talk speakers availableValues - mapped values:', values);
+            return values;
+          } catch (error) {
+            console.error('Talk speakers availableValues - error:', error);
+            throw error;
+          }
         },
       }
     },
@@ -122,18 +151,9 @@ export const TalkResourceOptions = {
         before: async (request) => {
           console.log('Talk new before - request payload:', request.payload);
           const { speakers, event_id, ...otherParams } = request.payload;
-          
-          // Обработка спикеров в формате speakers.0, speakers.1 и т.д.
-          const speakerIds = [];
-          for (const key in request.payload) {
-            if (key.startsWith('speakers.')) {
-              speakerIds.push(parseInt(request.payload[key]));
-            }
-          }
-
           const processedPayload = {
             ...otherParams,
-            speakers: speakerIds.length > 0 ? speakerIds : (speakers ? (Array.isArray(speakers) ? speakers : [speakers]).map(id => parseInt(id)) : []),
+            speakers: Array.isArray(speakers) ? speakers : (speakers ? [speakers] : []),
             event_id: event_id ? parseInt(event_id) : null,
           };
           console.log('Talk new before - processed payload:', processedPayload);
@@ -152,21 +172,16 @@ export const TalkResourceOptions = {
           console.log('Talk new after - found talk:', talk);
 
           if (talk) {
-            // Обработка спикеров в формате speakers.0, speakers.1 и т.д.
-            const speakerIds = [];
-            for (const key in record.params) {
-              if (key.startsWith('speakers.')) {
-                speakerIds.push(parseInt(record.params[key]));
-              }
-            }
-
-            if (speakerIds.length > 0) {
-              console.log('Talk new after - processing speakers:', speakerIds);
+            if (record.params.speakers && record.params.speakers.length > 0) {
+              console.log('Talk new after - processing speakers:', record.params.speakers);
               const speakers = await Speaker.find({
-                where: { id: In(speakerIds) }
+                where: { id: In(record.params.speakers) }
               });
               console.log('Talk new after - found speakers:', speakers);
               talk.speakers = speakers;
+            } else {
+              console.log('Talk new after - no speakers to process');
+              talk.speakers = [];
             }
 
             if (record.params.event_id) {
@@ -190,18 +205,9 @@ export const TalkResourceOptions = {
         before: async (request) => {
           console.log('Talk edit before - request payload:', request.payload);
           const { speakers, event_id, ...otherParams } = request.payload;
-          
-          // Обработка спикеров в формате speakers.0, speakers.1 и т.д.
-          const speakerIds = [];
-          for (const key in request.payload) {
-            if (key.startsWith('speakers.')) {
-              speakerIds.push(parseInt(request.payload[key]));
-            }
-          }
-
           const processedPayload = {
             ...otherParams,
-            speakers: speakerIds.length > 0 ? speakerIds : (speakers ? (Array.isArray(speakers) ? speakers : [speakers]).map(id => parseInt(id)) : []),
+            speakers: Array.isArray(speakers) ? speakers : (speakers ? [speakers] : []),
             event_id: event_id ? parseInt(event_id) : null,
           };
           console.log('Talk edit before - processed payload:', processedPayload);
@@ -220,22 +226,15 @@ export const TalkResourceOptions = {
           console.log('Talk edit after - found talk:', talk);
 
           if (talk) {
-            // Обработка спикеров в формате speakers.0, speakers.1 и т.д.
-            const speakerIds = [];
-            for (const key in record.params) {
-              if (key.startsWith('speakers.')) {
-                speakerIds.push(parseInt(record.params[key]));
-              }
-            }
-
-            if (speakerIds.length > 0) {
-              console.log('Talk edit after - processing speakers:', speakerIds);
+            if (record.params.speakers && record.params.speakers.length > 0) {
+              console.log('Talk edit after - processing speakers:', record.params.speakers);
               const speakers = await Speaker.find({
-                where: { id: In(speakerIds) }
+                where: { id: In(record.params.speakers) }
               });
               console.log('Talk edit after - found speakers:', speakers);
               talk.speakers = speakers;
             } else {
+              console.log('Talk edit after - no speakers to process');
               talk.speakers = [];
             }
 
@@ -248,6 +247,7 @@ export const TalkResourceOptions = {
                 talk.event_id = event.id;
               }
             } else {
+              console.log('Talk edit after - no event to process');
               talk.event = null;
               talk.event_id = null;
             }
@@ -258,7 +258,7 @@ export const TalkResourceOptions = {
 
           return response;
         },
-      }
+      },
     },
   },
 }; 

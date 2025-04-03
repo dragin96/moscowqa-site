@@ -54,6 +54,16 @@ export const EventResourceOptions = {
           edit: true,
         },
       },
+      registrationLink: {
+        position: 6,
+        type: 'string',
+        isVisible: {
+          list: true,
+          filter: true,
+          show: true,
+          edit: true,
+        },
+      },
       talks: {
         isVisible: false,
       }
@@ -62,10 +72,10 @@ export const EventResourceOptions = {
       sortBy: 'date',
       direction: 'desc',
     },
-    listProperties: ['id', 'title', 'date', 'location'],
+    listProperties: ['id', 'title', 'date', 'location', 'registrationLink'],
     filterProperties: ['id', 'title', 'date', 'location'],
-    editProperties: ['title', 'description', 'date', 'location'],
-    showProperties: ['id', 'title', 'description', 'date', 'location'],
+    editProperties: ['title', 'description', 'date', 'location', 'registrationLink'],
+    showProperties: ['id', 'title', 'description', 'date', 'location', 'registrationLink'],
     navigation: {
       name: 'Контент',
       icon: 'Calendar',

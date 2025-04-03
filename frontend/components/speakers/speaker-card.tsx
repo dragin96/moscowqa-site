@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Speaker } from "@/lib/api"
+import SafeHtml from "@/components/shared/safe-html"
 
 interface SpeakerCardProps {
   speaker: Speaker;
@@ -35,12 +36,21 @@ export function SpeakerCard({ speaker, showBio = false }: SpeakerCardProps) {
               {speaker.firstName} {speaker.lastName}
             </h3>
             {speaker.company && (
-              <p className="text-gray-600">{speaker.company}</p>
+              <div className="text-gray-600">
+                <SafeHtml html={speaker.company} />
+              </div>
+            )}
+            {speaker.position && (
+              <div className="text-gray-600 mt-1">
+                <SafeHtml html={speaker.position} />
+              </div>
             )}
           </div>
         </div>
         {showBio && speaker.bio && (
-          <p className="mt-4 text-gray-700 line-clamp-2">{speaker.bio}</p>
+          <div className="mt-4 text-gray-700">
+            <SafeHtml html={speaker.bio} className="line-clamp-2" />
+          </div>
         )}
       </div>
     </Link>

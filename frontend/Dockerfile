@@ -1,15 +1,37 @@
-FROM node:20-alpine
+# Build stage
+FROM node:18-alpine AS builder
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
+# Копируем файлы для установки зависимостей
 COPY package*.json ./
 
-RUN npm install --legacy-peer-deps
+# Устанавливаем зависимости
+RUN npm ci
 
+# Копируем исходный код
 COPY . .
 
-EXPOSE 3000
+# Собираем приложение
+RUN npm run build
 
-ENV NEXT_TELEMETRY_DISABLED=1
+# Production stage
+FROM node:18-alpine AS runner
 
-CMD ["npm", "run", "dev"] 
+WORKDIR /app
+
+# Устанавливаем только production зависимости
+COPY --from=builder /app/package*.json ./
+RUN npm ci --only=production
+
+# Копируем собранное приложение
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+# Копируем скрипт для запуска
+COPY docker-entrypoint.sh ./
+RUN chmod +x ./docker-entrypoint.sh
+
+# Запускаем приложение через entrypoint
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["npm", "start"] 

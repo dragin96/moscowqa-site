@@ -18,7 +18,7 @@ export class Speaker extends BaseEntity {
   @Column()
   firstName: string;
 
-  @Column()
+  @Column({ nullable: true })
   lastName: string;
 
   @Column({ nullable: true })
@@ -39,10 +39,24 @@ export class Speaker extends BaseEntity {
   @Column({ nullable: true })
   github: string;
 
+  @Column({ nullable: true })
+  position: string;
+
   @Column({ type: 'jsonb', nullable: true })
-  talkIds: number[];
+  socialLinks: Record<string, string>;
 
   @ManyToMany(() => Talk, talk => talk.speakers)
+  @JoinTable({
+    name: 'talk_speakers',
+    joinColumn: {
+      name: 'speaker_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'talk_id',
+      referencedColumnName: 'id',
+    },
+  })
   talks: Talk[];
 
   @CreateDateColumn()
