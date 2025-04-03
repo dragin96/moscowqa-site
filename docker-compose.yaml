@@ -19,29 +19,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/moscowqa
-      - JWT_SECRET=your-secret-key
-      - ADMIN_EMAIL=admin@moscowqa.ru
-      - ADMIN_PASSWORD=admin123
-      - TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-      - TELEGRAM_CHAT_ID=your-telegram-chat-id
+      - file: ./backend/.env
     depends_on:
       - db
     networks:
       - app-network
 
-  db:
-    image: postgres:16-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=moscowqa
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
 
 networks:
   app-network:
