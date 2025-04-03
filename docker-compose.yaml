@@ -1,31 +1,51 @@
 version: '3.8'
 
 services:
-  app:
-    image: node:20-alpine
-    container_name: nestjs_app
-    working_dir: /app
-    volumes:
-      - .:/app
-      - /app/node_modules
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    env_file:
-      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/moscowqa
+      - JWT_SECRET=your-secret-key
+      - ADMIN_EMAIL=admin@moscowqa.ru
+      - ADMIN_PASSWORD=admin123
+      - TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+      - TELEGRAM_CHAT_ID=your-telegram-chat-id
     depends_on:
       - db
-    command: sh -c "npm install && npm run start:dev"
+    networks:
+      - app-network
 
   db:
-    image: postgres:17-alpine
-    container_name: postgres_db
-    restart: always
-    env_file:
-      - .env
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=moscowqa
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
-  pgdata:
+  postgres_data:

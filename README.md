@@ -1,3 +1,136 @@
+# MoscowQA Site
+
+Сайт конференции MoscowQA с возможностью подачи заявок на доклады.
+
+## Структура проекта
+
+```
+moscowqa-site/
+├── backend/           # NestJS бэкенд
+│   ├── src/          # Исходный код бэкенда
+│   ├── test/         # Тесты
+│   └── ...
+├── frontend/         # React фронтенд
+│   ├── src/         # Исходный код фронтенда
+│   └── ...
+└── docker-compose.yaml
+```
+
+## Требования
+
+- Node.js 20+
+- Docker и Docker Compose
+- PostgreSQL 15+
+
+## Установка
+
+1. Клонируйте репозиторий:
+```bash
+git clone https://github.com/your-username/moscowqa-site.git
+cd moscowqa-site
+```
+
+2. Установите зависимости:
+```bash
+npm run install:all
+```
+
+3. Создайте файл `.env` в директории backend:
+```
+# Database
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=moscowqa
+DB_HOST=localhost
+DB_PORT=5432
+
+# Email
+ENABLE_EMAIL_NOTIFICATIONS=true
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+
+# Telegram
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+```
+
+## Запуск
+
+### Разработка
+
+1. Запустите все сервисы через Docker:
+```bash
+docker-compose up
+```
+
+Или запустите каждый сервис отдельно:
+
+2. Запустите бэкенд:
+```bash
+npm run start:backend
+```
+
+3. Запустите фронтенд:
+```bash
+npm run start:frontend
+```
+
+### Продакшн
+
+1. Соберите проект:
+```bash
+npm run build
+```
+
+2. Запустите через Docker:
+```bash
+docker-compose -f docker-compose.prod.yaml up
+```
+
+## API Endpoints
+
+### Подача заявки на доклад
+```
+POST /talk-requests
+
+{
+  "fullName": "Имя докладчика",
+  "email": "email@example.com",
+  "company": "Название компании",
+  "title": "Тема доклада",
+  "description": "Описание доклада"
+}
+```
+
+## Тестирование
+
+```bash
+# Запуск всех тестов
+npm run test
+
+# Запуск тестов бэкенда
+npm run test:backend
+
+# Запуск тестов фронтенда
+npm run test:frontend
+```
+
+## Миграции базы данных
+
+```bash
+# Создание новой миграции
+cd backend && npm run migration:generate
+
+# Применение миграций
+cd backend && npm run migration:run
+
+# Откат последней миграции
+cd backend && npm run migration:revert
+```
+
 ## Бэкенд для сайта MoscowQA
 
 ## Features
